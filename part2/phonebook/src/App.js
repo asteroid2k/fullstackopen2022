@@ -3,6 +3,7 @@ import Filter from "./Filter";
 import PersonForm from "./PersonForm";
 import Persons from "./Persons";
 import services from "./services";
+import "./app.css";
 
 const { getAll, create, remove, put } = services;
 
@@ -11,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filterName, setFilterName] = useState("");
+  const [notification, setNotification] = useState("");
+  const [error, setError] = useState("");
 
   const fetchPersons = () => {
     getAll().then((data) => setPersons(data));
@@ -32,17 +35,28 @@ const App = () => {
         return;
       }
 
-      return overwriteContact({ ...existing, ...newContact });
+      overwriteContact({ ...existing, ...newContact });
+
+      return;
     }
-    create(newContact).then((data) => setPersons(persons.concat(data)));
+    create(newContact)
+      .then((data) => setPersons(persons.concat(data)))
+      .then((err) => {
+        notify(`Added ${newName}`);
+      })
+      .catch(() => showError(`${newContact.name} was not added.`));
     clearForm();
   };
 
   const overwriteContact = (contact) => {
     const overwrite = (data) =>
       persons.map((note) => (note.id !== data.id ? note : data));
-    put(contact).then((data) => setPersons(overwrite(data)));
-    console.log("overwrite");
+    put(contact)
+      .then((data) => {
+        setPersons(overwrite(data));
+        notify(`${contact.name} has been updated.`);
+      })
+      .catch(() => showError(`${contact.name} was not updated.`));
   };
 
   const deleteContact = (id, name) => {
@@ -52,7 +66,9 @@ const App = () => {
     }
     const removeDeleted = () => persons.filter((person) => person.id !== id);
     setPersons(removeDeleted());
-    remove(id).then((data) => console.log("removed"));
+    remove(id)
+      .then((data) => notify(`${name} has been deleted.`))
+      .catch(() => showError(`${name} was not deleted.`));
   };
 
   useEffect(fetchPersons, []);
@@ -82,12 +98,34 @@ const App = () => {
     setNewName("");
     setNewNumber("");
   };
+  const notify = (text) => {
+    setNotification(text);
+    setTimeout(() => {
+      setNotification("");
+    }, 2000);
+  };
+  const showError = (text) => {
+    setError(text);
+    setTimeout(() => {
+      setError("");
+    }, 2000);
+  };
 
   const contactList = filterName ? filterByName() : persons;
 
   return (
     <div>
       <h2>Phonebook</h2>
+      {notification.length > 0 && (
+        <div className="notif">
+          <p>{notification}</p>
+        </div>
+      )}
+      {error.length > 0 && (
+        <div className="err">
+          <p>{error}</p>
+        </div>
+      )}
       <Filter handleFilter={handleFilter} filterName={filterName} />
       <h2>Add New</h2>
       <PersonForm
