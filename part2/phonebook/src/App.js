@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import Filter from "./Filter";
 import PersonForm from "./PersonForm";
 import Persons from "./Persons";
-import axios from "axios";
+import services from "./services";
+
+const { getAll, create, remove, put } = services;
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -10,24 +12,60 @@ const App = () => {
   const [newNumber, setNewNumber] = useState("");
   const [filterName, setFilterName] = useState("");
 
+  const fetchPersons = () => {
+    getAll().then((data) => setPersons(data));
+  };
+
+  const addContact = (event) => {
+    event.preventDefault();
+    const newContact = {
+      date: new Date().toISOString(),
+      name: newName,
+      number: newNumber,
+    };
+    const existing = checkDuplicate(newContact);
+    if (existing) {
+      const confirm = window.confirm(
+        `${newContact.name} is already added to phonebook, replace the old one?`
+      );
+      if (!confirm) {
+        return;
+      }
+
+      return overwriteContact({ ...existing, ...newContact });
+    }
+    create(newContact).then((data) => setPersons(persons.concat(data)));
+    clearForm();
+  };
+
+  const overwriteContact = (contact) => {
+    const overwrite = (data) =>
+      persons.map((note) => (note.id !== data.id ? note : data));
+    put(contact).then((data) => setPersons(overwrite(data)));
+    console.log("overwrite");
+  };
+
+  const deleteContact = (id, name) => {
+    const confirm = window.confirm(`Delete ${name}`);
+    if (!confirm) {
+      return;
+    }
+    const removeDeleted = () => persons.filter((person) => person.id !== id);
+    setPersons(removeDeleted());
+    remove(id).then((data) => console.log("removed"));
+  };
+
+  useEffect(fetchPersons, []);
+
   const handleNameChange = (event) => {
     setNewName(event.target.value.trim());
   };
   const handleNumberChange = (event) => {
     setNewNumber(event.target.value.trim());
   };
-  const addContact = (event) => {
-    event.preventDefault();
-    const newContact = { id: Date.now(), name: newName, number: newNumber };
-    if (checkDuplicate(newContact) > -1) {
-      alert(`${newContact.name} is already added to phonebook`);
-      return;
-    }
-    setPersons(persons.concat(newContact));
-    clearForm();
-  };
+
   const checkDuplicate = (contact) => {
-    return persons.findIndex(
+    return persons.find(
       (person) =>
         person.name.toLocaleLowerCase() === contact.name.toLocaleLowerCase()
     );
@@ -47,14 +85,6 @@ const App = () => {
 
   const contactList = filterName ? filterByName() : persons;
 
-  const fetchPersons = () => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
-    });
-  };
-
-  useEffect(fetchPersons, []);
-
   return (
     <div>
       <h2>Phonebook</h2>
@@ -68,7 +98,7 @@ const App = () => {
         handleNumberChange={handleNumberChange}
       />
       <h2>Numbers</h2>
-      <Persons persons={contactList} />
+      <Persons persons={contactList} remove={deleteContact} />
     </div>
   );
 };
