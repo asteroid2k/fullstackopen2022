@@ -44,7 +44,10 @@ const App = () => {
       .then((err) => {
         notify(`Added ${newName}`);
       })
-      .catch(() => showError(`${newContact.name} was not added.`));
+      .catch((e) => {
+        const errorMsg = e.response && e.response.data.error;
+        showError(errorMsg || `${newContact.name} was not added.`);
+      });
     clearForm();
   };
 
