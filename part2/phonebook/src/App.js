@@ -59,7 +59,10 @@ const App = () => {
         setPersons(overwrite(data));
         notify(`${contact.name} has been updated.`);
       })
-      .catch(() => showError(`${contact.name} was not updated.`));
+      .catch((e) => {
+        const errorMsg = e.response && e.response.data.error;
+        showError(errorMsg || `${contact.name} was not updated.`);
+      });
   };
 
   const deleteContact = (id, name) => {
