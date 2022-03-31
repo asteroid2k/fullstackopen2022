@@ -13,7 +13,7 @@ const create = (payload) => {
 
 const put = (payload) => {
   return instance
-    .put(`persons/${payload.id}`, payload)
+    .put(`persons/${payload._id}`, payload)
     .then((response) => response.data);
 };
 

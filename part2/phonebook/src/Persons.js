@@ -1,7 +1,7 @@
 const Persons = ({ persons, remove }) => {
   return (
     <ul>
-      {persons.map(({ id, name, number }) => (
+      {persons.map(({ _id: id, name, number }) => (
         <li key={name} style={{ display: "flex", alignItems: "center" }}>
           <p>
             {name} {number}

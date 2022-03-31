@@ -53,7 +53,7 @@ const App = () => {
 
   const overwriteContact = (contact) => {
     const overwrite = (data) =>
-      persons.map((note) => (note.id !== data.id ? note : data));
+      persons.map((note) => (note._id !== data._id ? note : data));
     put(contact)
       .then((data) => {
         setPersons(overwrite(data));
@@ -67,7 +67,7 @@ const App = () => {
     if (!confirm) {
       return;
     }
-    const removeDeleted = () => persons.filter((person) => person.id !== id);
+    const removeDeleted = () => persons.filter((person) => person._id !== id);
     setPersons(removeDeleted());
     remove(id)
       .then((data) => notify(`${name} has been deleted.`))
@@ -77,7 +77,7 @@ const App = () => {
   useEffect(fetchPersons, []);
 
   const handleNameChange = (event) => {
-    setNewName(event.target.value.trim());
+    setNewName(event.target.value);
   };
   const handleNumberChange = (event) => {
     setNewNumber(event.target.value.trim());
@@ -90,7 +90,7 @@ const App = () => {
     );
   };
   const handleFilter = (event) => {
-    setFilterName(event.target.value.trim());
+    setFilterName(event.target.value);
   };
   const filterByName = () => {
     return persons.filter((person) =>
